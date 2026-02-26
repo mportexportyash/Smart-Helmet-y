@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Smart Helmet | IoT System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --neon-blue: #00f2ff;
+            --neon-green: #39ff14;
+            --neon-red: #ff0055;
+            --dark-bg: #0d0d12;
+            --card-bg: #1a1a24;
+        }
+
+        body { background-color: var(--dark-bg); color: white; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 1100px; background: var(--card-bg); border-radius: 25px; padding: 30px; border: 1px solid #333; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+        
+        #autoSendOverlay {
+            display: none; position: fixed; top: 15%; left: 50%; transform: translate(-50%, -50%);
+            background: var(--neon-red); color: white; padding: 25px; border-radius: 15px;
+            z-index: 1000; text-align: center; box-shadow: 0 0 40px var(--neon-red);
+            border: 2px solid white;
+        }
+
+        .header { text-align: center; border-bottom: 2px solid var(--neon-blue); margin-bottom: 25px; padding-bottom: 10px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        .card { background: #252533; padding: 20px; border-radius: 15px; text-align: center; border-left: 5px solid #444; }
+        .val { font-size: 1.2rem; font-weight: bold; margin-top: 5px; color: var(--neon-blue); }
+
+        .data-table { width: 100%; margin-top: 30px; border-collapse: collapse; background: #000; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
+        .data-table th, .data-table td { padding: 12px; text-align: left; border-bottom: 1px solid #222; }
+        .data-table th { background: #111; color: var(--neon-blue); }
+
+        .motor-box { background: #000; margin-top: 25px; padding: 25px; border-radius: 20px; text-align: center; border: 1px solid var(--neon-blue); }
+        .propeller { font-size: 5rem; transition: 0.5s; }
+        .spinning { animation: rotate 0.2s linear infinite; color: var(--neon-green); }
+        @keyframes rotate { from {transform: rotate(0deg);} to {transform: rotate(360deg);} }
+
+        .status-ok { border-left-color: var(--neon-green) !important; color: var(--neon-green); }
+        .status-err { border-left-color: var(--neon-red) !important; color: var(--neon-red); }
+    </style>
+</head>
+<body>
+
+<div id="autoSendOverlay">
+    <i class="fas fa-ambulance fa-3x"></i>
+    <h2>CRASH DETECTED!</h2>
+    <p>Opening WhatsApp Emergency in <span id="countdown">5</span>s</p>
+</div>
+
+<div class="container">
+    <div class="header">
+        <h1>SMART HELMET SYSTEM</h1>
+        <p style="color: var(--neon-blue);">📍 JSPM HADAPSAR | REAL-TIME TELEMETRY</p>
+    </div>
+
+    <div class="grid">
+        <div id="hCard" class="card status-ok"><i class="fas fa-head-side-mask"></i><h3>Helmet</h3><div class="val">SECURED</div></div>
+        <div id="aCard" class="card status-ok"><i class="fas fa-flask"></i><h3>Alcohol</h3><div id="aVal" class="val">0.00 mg/L</div></div>
+        <div id="accCard" class="card status-ok"><i class="fas fa-burst"></i><h3>Impact</h3><div id="accVal" class="val">STABLE</div></div>
+        <div class="card status-ok"><i class="fas fa-location-dot"></i><h3>GPS</h3><div id="gpsVal" class="val">18.501, 73.944</div></div>
+        <div id="gsmCard" class="card status-ok"><i class="fas fa-tower-cell"></i><h3>GSM</h3><div id="gsmVal" class="val">SIGNAL: 92%</div></div>
+        
+    </div>
+
+    <div class="motor-box">
+        <h3>ENGINE STATUS</h3>
+        <i id="motorIcon" class="fas fa-fan propeller spinning"></i>
+        <div id="motorStat" class="val" style="color:var(--neon-green)">ENGINE RUNNING</div>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr><th>Sensor</th><th>Reading</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>MQ-3</td><td id="tAlc">0.01 mg/L</td><td>SAFE</td></tr>
+            <tr><td>MPU6050</td><td id="tAcc">X: 0.02 | Y: 0.01</td><td>STABLE</td></tr>
+            <tr><td>WI-fi </td><td id="tGsm">Active</td><td>ONLINE</td></tr>
+            <tr><td>Neo-6M</td><td id="tGps">18.5018, 73.9440</td><td>FIXED</td></tr>
+        </tbody>
+    </table>
+
+    <div style="margin-top: 30px; text-align: center; display: flex; gap: 15px; justify-content: center;">
+        <button onclick="window.location.reload()" style="padding: 15px 30px; background: #444; color: white; border: none; border-radius: 8px; cursor: pointer;">RESET</button>
+        <button onclick="simulateCrash()" style="padding: 15px 30px; background: var(--neon-red); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">SIMULATE CRASH</button>
+    </div>
+</div>
+
+
+
+<script>
+    // FIX: Use Country Code (91 for India)
+    const phone = "918485073016"; 
+    const collegeLoc = "JSPM Hadapsar, Pune";
+    let isCrashed = false;
+
+    // 1. FAST SENSOR UPDATES (Every 1s)
+    setInterval(() => {
+        if (!isCrashed) {
+            const x = (Math.random() * 0.15).toFixed(2);
+            const y = (Math.random() * 0.15).toFixed(2);
+            document.getElementById("tAcc").innerText = `X: ${x} | Y: ${y}`;
+
+            const lat = (18.5018 + Math.random() * 0.0003).toFixed(4);
+            const lon = (73.9440 + Math.random() * 0.0003).toFixed(4);
+            document.getElementById("gpsVal").innerText = `${lat}, ${lon}`;
+            document.getElementById("tGps").innerText = `${lat}, ${lon}`;
+
+            const sig = Math.floor(Math.random() * (99 - 85) + 85);
+            document.getElementById("gsmVal").innerText = `SIGNAL: ${sig}%`;
+        }
+    }, 1000);
+
+    // 2. ALCOHOL UPDATE (30s)
+    setInterval(() => {
+        if (!isCrashed) {
+            const level = (Math.random() * 0.03).toFixed(2);
+            document.getElementById("aVal").innerText = level + " mg/L";
+            document.getElementById("tAlc").innerText = level + " mg/L";
+        }
+    }, 30000);
+
+    // 3. BATTERY (5s)
+    setInterval(() => {
+        if (!isCrashed) {
+            let bat = parseInt(document.getElementById("batVal").innerText);
+            if (bat > 5) document.getElementById("batVal").innerText = (bat - 1) + "%";
+        }
+    }, 5000);
+
+    // 4. CRASH & WHATSAPP LOGIC
+    function simulateCrash() {
+        isCrashed = true;
+        
+        // UI Lockdown
+        document.getElementById("motorIcon").classList.remove("spinning");
+        document.getElementById("motorStat").innerText = "ENGINE CUT-OFF";
+        document.getElementById("motorStat").style.color = "var(--neon-red)";
+        document.getElementById("accVal").innerText = "CRASH DETECTED";
+        document.getElementById("accCard").className = "card status-err";
+        
+        // Show Overlay
+        document.getElementById("autoSendOverlay").style.display = "block";
+        
+        let count = 5;
+        const timer = setInterval(() => {
+            count--;
+            document.getElementById("countdown").innerText = count;
+            if(count <= 0) {
+                clearInterval(timer);
+                sendWhatsApp();
+            }
+        }, 1000);
+    }
+
+    function sendWhatsApp() {
+        const message = encodeURIComponent(`🚨 *SMART HELMET: CRASH ALERT* 🚨\n\nLocation: ${collegeLoc}\nLat: 18.5018, Lon: 73.9440\n\nGoogle Maps: https://www.google.com/maps?q=18.5018,73.9440`);
+        
+        // Fix: Use the standard API URL
+        const waUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${message}`;
+        
+        console.log("Redirecting to: " + waUrl);
+        window.open(waUrl, '_blank');
+    }
+</script>
+
+</body>
+</html>

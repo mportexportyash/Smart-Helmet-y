@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Helmet | Secure Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --neon-blue: #00f2ff;
+            --neon-green: #39ff14;
+            --dark-bg: #0d0d12;
+            --card-bg: #1a1a24;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* Tech Grid Background */
+        body::before {
+            content: "";
+            position: absolute;
+            width: 100%; height: 100%;
+            background: linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            z-index: -1;
+        }
+
+        .login-card {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2);
+            text-align: center;
+            width: 380px;
+        }
+
+        .login-card i {
+            font-size: 3.5rem;
+            color: var(--neon-blue);
+            margin-bottom: 10px;
+        }
+
+        h2 { margin-bottom: 5px; letter-spacing: 2px; }
+        p.subtitle { color: #888; margin-bottom: 25px; font-size: 0.9rem; }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 8px;
+            color: white;
+            box-sizing: border-box;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        select:focus, input:focus { border-color: var(--neon-blue); }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--neon-blue);
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            box-shadow: 0 0 20px var(--neon-blue);
+            transform: translateY(-2px);
+        }
+
+        #errorMsg { color: #ff0055; font-size: 0.85rem; margin-top: 15px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <i class="fas fa-microchip"></i>
+        <h2>SYSTEM ACCESS</h2>
+        <p class="subtitle">IoT Smart Helmet Gateway</p>
+        
+        <select id="role">
+            <option value="user">RIDER / USER</option>
+            <option value="admin">SYSTEM ADMINISTRATOR</option>
+        </select>
+
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        
+        <button class="login-btn" onclick="validateLogin()">Authorize Login</button>
+        
+        <p id="errorMsg">❌ Access Denied: Incorrect credentials for selected role.</p>
+    </div>
+
+    <script>
+        function validateLogin() {
+            const role = document.getElementById('role').value;
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const error = document.getElementById('errorMsg');
+
+            // --- ADMIN LOGIN LOGIC ---
+            if (role === "admin") {
+                if (user === "admin" && pass === "admin123") {
+                    window.location.href = "home.html"; // Redirects to Admin Dashboard
+                } else {
+                    showError();
+                }
+            } 
+            
+            // --- USER LOGIN LOGIC ---
+            else if (role === "user") {
+                if (user === "user" && pass === "user123") {
+                    window.location.href = "user.html"; // Redirects to User Profile Page
+                } else {
+                    showError();
+                }
+            }
+        }
+
+        function showError() {
+            const error = document.getElementById('errorMsg');
+            error.style.display = 'block';
+            // Shake effect for error
+            document.querySelector('.login-card').style.borderColor = '#ff0055';
+            setTimeout(() => {
+                document.querySelector('.login-card').style.borderColor = 'var(--neon-blue)';
+            }, 500);
+        }
+    </script>
+
+</body>
+</html>
